@@ -1,0 +1,310 @@
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta http-equiv="X-UA-Compatible" content="IE=edge" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Document</title>
+    <style>
+      *,
+      ::before,
+      ::after {
+        box-sizing: border-box;
+      }
+
+      body {
+        margin: 0;
+        font-family: "Segoe UI", Tahoma, Geneva, Verdana, sans-serif;
+        background-color: #e2e8f3;
+      }
+
+      .container {
+        display: flex;
+        flex-flow: row;
+        width: 95%;
+        margin: 0 auto;
+        max-width: 1000px;
+      }
+
+      .col {
+        flex: 0 260px;
+      }
+
+      .col.dropzone {
+        flex: 1 260px;
+      }
+
+      .col + .col {
+        margin-left: 3em;
+      }
+
+      .dropzone {
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        width: 25%;
+        height: 300px;
+        background-color: #878787;
+        margin: 5.5em 0 5.5em 0;
+
+        background: linear-gradient(90deg, white 50%, transparent 50%),
+          linear-gradient(90deg, white 50%, transparent 50%),
+          linear-gradient(0, white 50%, transparent 50%),
+          #878787 linear-gradient(0, white 50%, transparent 50%);
+        background-size: 50px 6px, 50px 6px, 6px 50px, 6px 50px;
+        background-repeat: repeat-x, repeat-x, repeat-y, repeat-y;
+        background-position: 0% 0%, 100% 100%, 0% 100%, 100% 0%;
+        animation: slideimages 5.5s linear 0s infinite;
+        border: 10px solid #878787;
+      }
+
+      @keyframes slideimages {
+        to {
+          background-position: 100% 0%, 0% 100%, 0% 0%, 100% 100%;
+        }
+      }
+
+      /* .info + div {
+            margin-left: 20px;
+        } */
+
+      .box {
+        text-align: center;
+        /* border: 2px solid red; */
+        padding: 0.4em 1.2em;
+        margin-top: 1em;
+      }
+
+      .box h2 {
+        text-transform: uppercase;
+        font-size: 1.2em;
+      }
+
+      .truck {
+        border: 2px solid #538cff;
+      }
+
+      .car {
+        border: 2px solid #ffd92e;
+      }
+
+      .ambulance {
+        border: 2px solid #d51c00;
+      }
+
+      .bicycle {
+        border: 2px solid #d51c00;
+      }
+
+      .box p {
+        font-size: 1.1rem;
+      }
+
+      /* img {
+            
+        } */
+
+      .dropzone.invalid {
+        background-color: red;
+        border: 10px solid red;
+      }
+
+      .dropzone.valid {
+        background-color: green;
+        border: 10px solid green;
+      }
+
+      button {
+        padding: 0.2em 0.5em;
+        margin-top: 1em;
+        margin-bottom: 1em;
+      }
+
+      @media screen and (max-width: 850px) {
+        .container {
+          flex-direction: column;
+          justify-content: center;
+          align-items: center;
+        }
+        .col {
+          width: 300px;
+        }
+      }
+    </style>
+  </head>
+  <body>
+    <div class="container">
+      <div class="info col">
+        <div class="ambulance box">
+          <h2>Ambulance Parking</h2>
+          <p>Mon Thru Fri</p>
+        </div>
+        <div class="truck box">
+          <h2>FIRE TRUCK PARKING</h2>
+          <p>Sat Sun</p>
+        </div>
+        <div class="car box">
+          <h2>CAR PARKING</h2>
+          <p>Tue</p>
+        </div>
+        <div class="bicycle box">
+          <h2>BICYCLE PARKING</h2>
+          <p>Wed</p>
+        </div>
+      </div>
+      <div class="dropzone col"></div>
+      <div class="images col">
+        <h2>Try and park!</h2>
+        <div class="draggable" draggable="true">
+          <img id="truck" src="./images/truck.png" alt="truck_image" />
+        </div>
+        <div class="draggable" draggable="true">
+          <img
+            id="ambulance"
+            src="./images/ambulance.png"
+            alt="ambulance_image"
+          />
+        </div>
+        <div class="draggable" draggable="true">
+          <img id="car" src="./images/car.png" alt="car_image" />
+        </div>
+        <div class="draggable" draggable="true">
+          <img id="bicycle" src="./images/bicycle.png" alt="bicycle_image" />
+        </div>
+        <div>
+          <button>Show Vehicles that can park</button>
+          <button>Show all</button>
+        </div>
+      </div>
+    </div>
+    <script>
+      // simplified version
+      const APP = {
+        // 0 sun 1 m 2 tue 3 wed 4 thur 5 fri 6 sat
+        result: {
+          ambulance: [1, 4, 5],
+          car: [2],
+          bicycle: [3],
+          truck: [0, 6],
+        },
+        reference: null,
+
+        init() {
+          document.title = "🛴🛴Can you park here?"
+          document.body.addEventListener("dragstart", APP.handleDragStart);
+          document.body.addEventListener("dragover", APP.handleDragOver);
+          document.body.addEventListener("dragenter", APP.handleDragEnter);
+          document.body.addEventListener("drop", APP.handleDrop);
+          document.body.addEventListener("dragleave", APP.handleDragLeave);
+          let methods = [APP.showValid, APP.showAll];
+          document.querySelectorAll("button");
+          // using polyfill
+          [].forEach.call(document.querySelectorAll("button"), (b, index) => {
+            b.addEventListener("click", methods[index]);
+          });
+        },
+
+        showValid() {
+          let day = new Date().getDay();
+          let id = [];
+          for (let property in APP.result) {
+            if (!APP.result[property].includes(day)) {
+              id.push(property);
+              document.getElementById(property).style.display = "none";
+            }
+          }
+
+          APP.reference = id;
+        },
+
+        showAll(ev) {
+          if (APP.reference) {
+            APP.reference.forEach((id) => {
+              document.getElementById(id).style.display = "inline";
+            });
+          }
+        },
+
+        handleDragLeave(ev) {
+          let target = ev.target;
+          if (target.classList.contains("dropzone")) {
+            target.classList.remove("valid");
+            target.classList.remove("invalid");
+          }
+        },
+
+        handleDragOver(ev) {
+          let target = ev.target;
+          ev.preventDefault();
+          if (target.classList.contains("dropzone")) {
+            console.log("dragover");
+          }
+        },
+
+        handleDragEnter(ev) {
+          let target = ev.target;
+          ev.dataTransfer.dropEffect = "move";
+
+          if (target.classList.contains("dropzone")) {
+            // do some test then
+            let bool = APP.checkValid(ev);
+            if (bool) {
+              target.classList.add("valid");
+            } else {
+              target.classList.add("invalid");
+            }
+
+           
+          }
+        },
+
+        checkValid(ev) {
+          let day = new Date().getDay();
+          let id = ev.dataTransfer.getData("text/plain");
+         
+          if (APP.result[id].includes(day)) {
+            return true;
+          }
+          return false;
+        },
+
+        handleDrop(ev) {
+          let target = ev.target;
+          ev.preventDefault();
+          if (target.classList.contains("dropzone")) {
+
+            if (APP.checkValid(ev)) {
+              // move the vehicle to the dropzone;
+              let id = ev.dataTransfer.getData("text/plain");
+              let element = document.getElementById(id);
+              let dropzone = document.querySelector(".dropzone");
+              // let div = document.createElement('div');
+              // div.appendChild(element);
+              dropzone.appendChild(element);
+
+              // since i have added event on body so
+              element.draggable = false;
+            }
+
+            target.classList.remove("valid");
+            target.classList.remove("invalid");
+          }
+        },
+
+        handleDragStart(ev) {
+          let target = ev.target;
+
+          if (!target.closest(".draggable")) return;
+
+          if (target.classList.contains("draggable")) {
+            target = target.firstElementChild;
+          }
+
+          ev.dataTransfer.setData("text/plain", target.id);
+          ev.dataTransfer.effectAllowed = "move";
+        },
+      };
+
+      document.addEventListener("DOMContentLoaded", APP.init);
+    </script>
+  </body>
+</html>
